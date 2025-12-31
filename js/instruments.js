@@ -164,6 +164,109 @@ const Instruments = {
         }
     },
 
+        recorder: {
+        name: "Soprano Recorder",
+        render: (container) => {
+            // Realistic Soprano Recorder (Cream/Ivory color)
+            // Keys 1-9
+            const notes = [
+                { note: 'C5', freq: 523.25, key: '1', label: 'C' },
+                { note: 'D5', freq: 587.33, key: '2', label: 'D' },
+                { note: 'E5', freq: 659.25, key: '3', label: 'E' },
+                { note: 'F5', freq: 698.46, key: '4', label: 'F' },
+                { note: 'G5', freq: 783.99, key: '5', label: 'G' },
+                { note: 'A5', freq: 880.00, key: '6', label: 'A' },
+                { note: 'B5', freq: 987.77, key: '7', label: 'B' },
+                { note: 'C6', freq: 1046.50, key: '8', label: 'C' },
+                { note: 'D6', freq: 1174.66, key: '9', label: 'D' }
+            ];
+
+            container.innerHTML = `
+                <div class="recorder-wrapper" style="display:flex; flex-direction:column; align-items:center; height:100%; padding:20px; user-select:none;">
+                    <!-- Recorder Instrument -->
+                    <div class="recorder-instrument" style="position:relative; width:45px; height:500px; display:flex; flex-direction:column; align-items:center;">
+                        
+                        <!-- HEAD JOINT -->
+                        <div class="head-joint" style="width:100%; height:120px; background:linear-gradient(90deg, #e6dace 0%, #fffbf0 40%, #dcd0c0 100%); border-radius:10px 10px 2px 2px; position:relative; box-shadow:5px 5px 15px rgba(0,0,0,0.3); border:1px solid #ccc; z-index:3;">
+                            <!-- Mouthpiece/Beak -->
+                            <div style="width:100%; height:30px; background:linear-gradient(90deg, #e6dace, #fffbf0, #dcd0c0); clip-path: polygon(20% 0, 80% 0, 100% 100%, 0% 100%);"></div>
+                            <!-- Window/Labium -->
+                            <div style="width:20px; height:12px; background:#443322; margin:20px auto 0; border-radius:2px; box-shadow:inset 0 0 5px #000;"></div>
+                            <!-- Joint Ring -->
+                            <div style="position:absolute; bottom:0; width:110%; left:-5%; height:10px; background:linear-gradient(90deg, #d4c4b0, #f0e6d6, #d4c4b0); border-radius:2px;"></div>
+                        </div>
+
+                        <!-- BODY JOINT -->
+                        <div class="body-joint" style="flex:1; width:90%; background:linear-gradient(90deg, #e6dace 0%, #fffbf0 40%, #dcd0c0 100%); display:flex; flex-direction:column; justify-content:space-evenly; align-items:center; padding:10px 0; box-shadow:5px 0 15px rgba(0,0,0,0.2); border-left:1px solid #ccc; border-right:1px solid #ccc; z-index:2;">
+                            ${notes.filter((_, i) => i < 7).map((n) => `
+                                <div class="recorder-hole" data-key="${n.key}" data-freq="${n.freq}" style="width:16px; height:16px; background:radial-gradient(circle, #3d2b1f 40%, #5d4037 100%); border-radius:50%; box-shadow:inset 1px 2px 4px rgba(0,0,0,0.8); cursor:pointer; position:relative;">
+                                    <div class="finger-cover" style="position:absolute; top:-2px; left:-2px; width:20px; height:20px; background:rgba(255,200,150,0.6); border-radius:50%; opacity:0; transition:opacity 0.1s;"></div>
+                                </div>
+                            `).join('')}
+                             <!-- Double holes for low notes usually, but simplifying to single for 1-9 mapping -->
+                        </div>
+
+                        <!-- FOOT JOINT -->
+                        <div class="foot-joint" style="width:105%; height:80px; background:linear-gradient(90deg, #e6dace 0%, #fffbf0 40%, #dcd0c0 100%); border-radius:2px 2px 15px 15px; position:relative; box-shadow:5px 5px 15px rgba(0,0,0,0.3); border:1px solid #ccc; display:flex; flex-direction:column; justify-content:center; align-items:center; z-index:1; margin-top:-2px;">
+                            <!-- Joint Ring Top -->
+                            <div style="width:105%; height:8px; background:linear-gradient(90deg, #d4c4b0, #f0e6d6, #d4c4b0); position:absolute; top:0; border-radius:2px;"></div>
+                            
+                            <!-- Last Holes (C6, D6 mapped here for visual distribution) -->
+                            ${notes.filter((_, i) => i >= 7).map((n) => `
+                                <div class="recorder-hole" data-key="${n.key}" data-freq="${n.freq}" style="width:14px; height:14px; background:radial-gradient(circle, #3d2b1f 40%, #5d4037 100%); border-radius:50%; box-shadow:inset 1px 2px 4px rgba(0,0,0,0.8); cursor:pointer; margin:4px 0; position:relative;">
+                                    <div class="finger-cover" style="position:absolute; top:-2px; left:-2px; width:18px; height:18px; background:rgba(255,200,150,0.6); border-radius:50%; opacity:0; transition:opacity 0.1s;"></div>
+                                </div>
+                            `).join('')}
+
+                            <!-- Bell Flare -->
+                            <div style="position:absolute; bottom:0; width:120%; height:15px; background:linear-gradient(90deg, #d4c4b0, #f0e6d6, #d4c4b0); border-radius:0 0 50% 50%;"></div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top:20px; color:var(--text-dim); text-align:center;">
+                        High Pitch Soprano Recorder<br>
+                        Hover holes or Keys 1-9
+                    </div>
+                </div>
+            `;
+
+            const rContainer = container.querySelector('.recorder-wrapper');
+            const holes = rContainer.querySelectorAll('.recorder-hole');
+
+            const playNote = (hole) => {
+                const freq = parseFloat(hole.dataset.freq);
+                window.audioEngine.playNote(freq, 'recorder', 0.5);
+                
+                const cover = hole.querySelector('.finger-cover');
+                cover.style.opacity = '1';
+                hole.style.boxShadow = '0 0 10px var(--accent)'; // Glow effect
+                
+                setTimeout(() => {
+                    cover.style.opacity = '0';
+                    hole.style.boxShadow = 'inset 1px 2px 4px rgba(0,0,0,0.8)';
+                }, 150);
+            };
+
+            holes.forEach(hole => {
+                hole.addEventListener('mousedown', () => playNote(hole));
+                hole.addEventListener('mouseenter', () => playNote(hole));
+            });
+
+            // Keyboard Handler
+            const keyHandler = (e) => {
+                if (!container.isConnected) return;
+                const hole = Array.from(holes).find(h => h.dataset.key === e.key);
+                if (hole) playNote(hole);
+            };
+
+            if (container._recorderKeyHandler) {
+                document.removeEventListener('keydown', container._recorderKeyHandler);
+            }
+            container._recorderKeyHandler = keyHandler;
+            document.addEventListener('keydown', keyHandler);
+        }
+    },
+
     guitar: {
         name: "Acoustic Guitar",
         currentChord: 'C',
