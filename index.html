@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlayTune Studio | Virtual Instruments & Online Music Creator</title>
+    <meta name="description"
+        content="Play online musical instruments like guitar, piano, and violin for free. Record your sessions, download MP3s, and create BGM for reels and videos with PlayTune Studio.">
+    <meta name="keywords"
+        content="online musical instruments, play guitar online, online piano recorder, free bgm maker, virtual studio, music creator">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap"
+        rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="dark-theme">
+    <div id="app">
+        <!-- Navigation -->
+        <nav class="glass-nav">
+            <div class="logo">
+                <span class="neon-text">B4I</span> PlayTune
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home" class="active" data-page="home">Home</a></li>
+                <li><a href="#instruments" data-page="instruments">Instruments</a></li>
+                <li><a href="#recorder" data-page="recorder">Recorder</a></li>
+                <li><a href="#my-recordings" data-page="my-recordings">My Library</a></li>
+                <li><a href="#about" data-page="about">About</a></li>
+            </ul>
+            <div class="nav-actions">
+                <button id="theme-toggle" title="Toggle Light/Dark Mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="btn btn-primary">Sign In</button>
+            </div>
+            <div class="mobile-menu-btn">
+                <i class="fas fa-bars"></i>
+            </div>
+        </nav>
+
+        <!-- Main Content (SPA Sections) -->
+        <main id="main-content">
+            <!-- Home Section -->
+            <section id="home" class="page-section active">
+                <div class="hero">
+                    <div class="hero-content">
+                        <h1 class="reveal-text">Create Your Own <br><span class="gradient-text">Music Online.</span>
+                        </h1>
+                        <p class="subtitle">A professional-grade virtual studio in your browser. Play, record, and
+                            export studio-quality BGM for your reels and videos in seconds.</p>
+                        <div class="hero-btns">
+                            <a href="#instruments" class="btn btn-lg btn-primary scroll-link">Start Creating</a>
+                            <a href="#about" class="btn btn-lg btn-outline scroll-link">How it Works</a>
+                        </div>
+                        <div class="hero-stats">
+                            <div class="stat"><span class="num">5+</span> Instruments</div>
+                            <div class="stat"><span class="num">HQ</span> Export</div>
+                            <div class="stat"><span class="num">FREE</span> Access</div>
+                        </div>
+                    </div>
+                    <div class="hero-visual">
+                        <div class="visual-glow"></div>
+                        <img src="assets/playtune_studio_hero.png" alt="PlayTune Studio Dashboard" class="floating-img">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Instruments Section -->
+            <section id="instruments" class="page-section">
+                <div class="section-header">
+                    <h2 class="title">Choose Your <span class="gradient-text">Instrument</span></h2>
+                    <p>Select from our high-fidelity virtual instruments to start playing.</p>
+                </div>
+                <div class="instruments-grid">
+                    <div class="instrument-card" data-instrument="piano">
+                        <div class="card-icon"><i class="fas fa-keyboard"></i></div>
+                        <h3>Grand Piano</h3>
+                        <p>High-fidelity studio grand piano with multi-velocity samples.</p>
+                        <button class="btn btn-sm btn-outline">Load Studio</button>
+                    </div>
+                    <div class="instrument-card" data-instrument="guitar">
+                        <div class="card-icon"><i class="fas fa-guitar"></i></div>
+                        <h3>Acoustic Guitar</h3>
+                        <p>Crisp acoustic guitar strings with real strumming simulation.</p>
+                        <button class="btn btn-sm btn-outline">Load Studio</button>
+                    </div>
+                    <div class="instrument-card" data-instrument="drums">
+                        <div class="card-icon"><i class="fas fa-drum"></i></div>
+                        <h3>Drum Studio</h3>
+                        <p>Professional percussion pads for beat making and rhythm.</p>
+                        <button class="btn btn-sm btn-outline">Load Studio</button>
+                    </div>
+                    <div class="instrument-card" data-instrument="keyboard">
+                        <div class="card-icon"><i class="fas fa-wave-square"></i></div>
+                        <h3>Neon Synth</h3>
+                        <p>Modern electronic keyboard with futuristic synthesizer leads.</p>
+                        <button class="btn btn-sm btn-outline">Load Studio</button>
+                    </div>
+                    <div class="instrument-card" data-instrument="violin">
+                        <div class="card-icon"><i class="fas fa-info-circle"></i></div>
+                        <h3>Virtuoso Violin</h3>
+                        <p>Bow control simulation for realistic orchestral strings.</p>
+                        <button class="btn btn-sm btn-outline">Load Studio</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Studio Area (Dynamic Content) -->
+            <section id="studio-workspace" class="page-section">
+                <div class="studio-header">
+                    <button id="exit-studio" class="btn btn-icon"><i class="fas fa-arrow-left"></i></button>
+                    <h2 id="active-instrument-name">Grand Piano</h2>
+                    <div class="studio-controls">
+                        <div class="metronome-control">
+                            <i class="fas fa-clock"></i>
+                            <input type="number" id="bpm-input" value="120" min="40" max="240">
+                            <span>BPM</span>
+                        </div>
+                        <button id="record-btn" class="btn btn-round btn-record">
+                            <i class="fas fa-circle"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="instrument-canvas-container">
+                    <!-- Instruments will be rendered here dynamically via JS -->
+                    <div id="piano-view" class="instrument-view active">
+                        <div class="piano-keys-container"></div>
+                    </div>
+                </div>
+
+                <div class="recording-tray hide">
+                    <div class="visualizer-container">
+                        <canvas id="recording-visualizer"></canvas>
+                    </div>
+                    <div class="recording-timer">00:00:00</div>
+                    <button id="stop-record" class="btn btn-danger">Stop & Save</button>
+                </div>
+            </section>
+
+            <!-- My Recordings Section -->
+            <section id="my-recordings" class="page-section">
+                <div class="section-header">
+                    <h2 class="title">My <span class="gradient-text">Studio Library</span></h2>
+                    <p>Access and manage your recorded sessions.</p>
+                </div>
+                <div class="recordings-list" id="recordings-list">
+                    <!-- Dynamic Content -->
+                    <div class="empty-state">
+                        <i class="fas fa-music"></i>
+                        <p>No recordings yet. Start playing to create some magic!</p>
+                        <a href="#instruments" class="btn btn-primary">Load an Instrument</a>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Global Player / Control Bar -->
+        <footer class="studio-footer">
+            <div class="current-track-info">
+                <div class="track-visual"><i class="fas fa-waveform"></i></div>
+                <div class="track-details">
+                    <span class="track-name">Ready to play</span>
+                    <span class="status-indicator">Studio Idle</span>
+                </div>
+            </div>
+            <div class="global-controls">
+                <button class="btn btn-icon"><i class="fas fa-step-backward"></i></button>
+                <button class="btn btn-play-main"><i class="fas fa-play"></i></button>
+                <button class="btn btn-icon"><i class="fas fa-step-forward"></i></button>
+            </div>
+            <div class="volume-control">
+                <i class="fas fa-volume-up"></i>
+                <input type="range" min="0" max="100" value="70" class="volume-slider">
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/audio-engine.js"></script>
+    <script src="js/instruments.js"></script>
+    <script src="js/recorder.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
