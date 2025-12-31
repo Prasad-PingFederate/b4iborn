@@ -335,22 +335,39 @@ const Instruments = {
     panFlute: {
         name: "Pan Flute",
         render: (container) => {
-            // Updated realistic visual
+            // Enhanced 15-pipe Pan Flute matching virtualmusicalinstruments.com
+            // Range: G4 to G6
             const pipes = [
-                { note: 'G4', freq: 392.00, height: 220 },
-                { note: 'A4', freq: 440.00, height: 200 },
-                { note: 'B4', freq: 493.88, height: 180 },
-                { note: 'C5', freq: 523.25, height: 170 },
-                { note: 'D5', freq: 587.33, height: 150 },
-                { note: 'E5', freq: 659.25, height: 135 },
-                { note: 'F#5', freq: 739.99, height: 120 },
-                { note: 'G5', freq: 783.99, height: 110 } // Added G5 for full octave feel
+                { note: 'G4', freq: 392.00, key: '1' },
+                { note: 'A4', freq: 440.00, key: '2' },
+                { note: 'B4', freq: 493.88, key: '3' },
+                { note: 'C5', freq: 523.25, key: '4' },
+                { note: 'D5', freq: 587.33, key: '5' },
+                { note: 'E5', freq: 659.25, key: '6' },
+                { note: 'F#5', freq: 739.99, key: '7' },
+                { note: 'G5', freq: 783.99, key: '8' },
+                { note: 'A5', freq: 880.00, key: '9' },
+                { note: 'B5', freq: 987.77, key: '0' },
+                { note: 'C6', freq: 1046.50, key: 'q' },
+                { note: 'D6', freq: 1174.66, key: 'w' },
+                { note: 'E6', freq: 1318.51, key: 'e' },
+                { note: 'F#6', freq: 1479.98, key: 'r' },
+                { note: 'G6', freq: 1567.98, key: 't' }
             ];
 
+            // Calculate height gradient
+            const maxH = 280;
+            const minH = 80;
+            pipes.forEach((p, i) => {
+                p.height = maxH - ((maxH - minH) / (pipes.length - 1)) * i;
+            });
+
             container.innerHTML = `
-                <div class="pan-flute-wrapper" style="position:relative; display:inline-block; padding:20px;">
+                <div class="pan-flute-wrapper" style="position:relative; display:inline-block; padding:30px; user-select:none;">
                     <div class="pan-flute-container" style="display:flex; align-items:flex-start; height:100%;"></div>
-                    <div class="pan-binding" style="position:absolute; top:40px; left:0; width:100%; height:20px; background:linear-gradient(to bottom, #8B4513, #5D4037); border-radius:10px; opacity:0.9; pointer-events:none;"></div>
+                    <!-- Curved Binding -->
+                    <div class="pan-binding-curve" style="position:absolute; top:60px; left:-2%; width:104%; height:35px; background:linear-gradient(to right, #5D4037, #8B4513, #5D4037); border-radius:50% / 100% 100% 0 0; box-shadow:0 5px 10px rgba(0,0,0,0.4); pointer-events:none; z-index:10;"></div>
+                    <div style="text-align:center; margin-top:30px; color:var(--text-dim); font-size:0.9rem;">Hover to play | Keys: 1-0, Q-T</div>
                 </div>
             `;
             const wrapper = container.querySelector('.pan-flute-wrapper');
@@ -358,46 +375,80 @@ const Instruments = {
             wrapper.parentNode.style.justifyContent = 'center';
             wrapper.parentNode.style.alignItems = 'center';
 
-            const pfInfo = container.querySelector('.pan-flute-container');
+            const pfContainer = container.querySelector('.pan-flute-container');
 
             pipes.forEach(p => {
                 const pipe = document.createElement('div');
                 pipe.className = 'pan-pipe';
+                pipe.dataset.key = p.key;
                 pipe.style.width = '35px';
                 pipe.style.height = `${p.height}px`;
-                pipe.style.background = 'linear-gradient(90deg, #e3c099 0%, #ffe0b2 50%, #d2a679 100%)'; // Realistic bamboo gradient
+                pipe.style.background = 'linear-gradient(90deg, #e3c099 10%, #fff3e0 40%, #d2a679 90%)'; // Realistic bamboo
                 pipe.style.border = '1px solid #8B4513';
-                pipe.style.borderBottomLeftRadius = '15px';
-                pipe.style.borderBottomRightRadius = '15px';
+                pipe.style.borderBottomLeftRadius = '18px';
+                pipe.style.borderBottomRightRadius = '18px';
                 pipe.style.margin = '0 2px';
-                pipe.style.boxShadow = '2px 5px 10px rgba(0,0,0,0.4)';
+                pipe.style.boxShadow = '3px 5px 10px rgba(0,0,0,0.3)';
                 pipe.style.cursor = 'pointer';
                 pipe.style.position = 'relative';
+                pipe.style.transition = 'transform 0.05s, background 0.05s';
+                pipe.style.zIndex = '1';
 
-                // Opening at the top
-                const hole = document.createElement('div');
-                hole.style.width = '20px';
-                hole.style.height = '8px';
-                hole.style.background = '#2e1a0f';
-                hole.style.borderRadius = '50%';
-                hole.style.margin = '5px auto 0';
-                hole.style.opacity = '0.7';
-                pipe.appendChild(hole);
+                // Pipe visual details (hole + key label)
+                pipe.innerHTML = `
+                    <div style="width:20px; height:8px; background:radial-gradient(circle, #2e1a0f, #000); border-radius:50%; margin:5px auto 0; opacity:0.6;"></div>
+                    <div style="position:absolute; bottom:15px; width:100%; text-align:center; color:#5d4037; font-size:11px; font-weight:bold; opacity:0.8; pointer-events:none;">${p.key.toUpperCase()}</div>
+                `;
 
                 const play = () => {
-                    window.audioEngine.playNote(p.freq, 'panFlute', 0.8);
-                    pipe.style.transform = 'translateY(8px)';
-                    pipe.style.background = 'linear-gradient(90deg, #ffe0b2 0%, #fff 50%, #e3c099 100%)'; // Brighten on play
+                    window.audioEngine.playNote(p.freq, 'panFlute', 0.5);
+                    pipe.style.transform = 'translateY(12px)';
+                    pipe.style.background = 'linear-gradient(90deg, #ffd54f 10%, #fff 40%, #ffca28 90%)'; // Gold highlight
+                    pipe.style.boxShadow = '0 0 15px #ffd700';
                     setTimeout(() => {
                         pipe.style.transform = 'translateY(0)';
-                        pipe.style.background = 'linear-gradient(90deg, #e3c099 0%, #ffe0b2 50%, #d2a679 100%)';
+                        pipe.style.background = 'linear-gradient(90deg, #e3c099 10%, #fff3e0 40%, #d2a679 90%)';
+                        pipe.style.boxShadow = '3px 5px 10px rgba(0,0,0,0.3)';
                     }, 150);
                 };
 
+                // Mouse interactions
                 pipe.addEventListener('mousedown', play);
-                pipe.addEventListener('mouseenter', play);
-                pfInfo.appendChild(pipe);
+                pipe.addEventListener('mouseenter', play); // Hover to play as requested
+
+                pfContainer.appendChild(pipe);
             });
+
+            // Keyboard support (global listener for this instrument rendering)
+            const keyHandler = (e) => {
+                if (!container.isConnected) return; // Stop if instrument is unmounted
+                if (e.repeat) return;
+                
+                const key = e.key.toLowerCase();
+                const pipe = Array.from(pfContainer.children).find(el => el.dataset.key === key);
+                
+                if (pipe) {
+                    const pObj = pipes.find(p => p.key === key);
+                    if(pObj) {
+                        window.audioEngine.playNote(pObj.freq, 'panFlute', 0.5);
+                        pipe.style.transform = 'translateY(12px)';
+                        pipe.style.background = 'linear-gradient(90deg, #ffd54f 10%, #fff 40%, #ffca28 90%)';
+                        pipe.style.boxShadow = '0 0 15px #ffd700';
+                        setTimeout(() => {
+                            pipe.style.transform = 'translateY(0)';
+                            pipe.style.background = 'linear-gradient(90deg, #e3c099 10%, #fff3e0 40%, #d2a679 90%)';
+                            pipe.style.boxShadow = '3px 5px 10px rgba(0,0,0,0.3)';
+                        }, 150);
+                    }
+                }
+            };
+            
+            // Remove previous listener if exists (to avoid duplicates on re-render)
+            if (container._panFluteKeyHandler) {
+                document.removeEventListener('keydown', container._panFluteKeyHandler);
+            }
+            container._panFluteKeyHandler = keyHandler;
+            document.addEventListener('keydown', keyHandler);
         }
     },
 
