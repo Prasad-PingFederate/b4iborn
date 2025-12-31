@@ -1,21 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
-
-<head>
+<html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PlayTune Studio | Virtual Instruments & Online Music Creator</title>
-    <meta name="description"
-        content="Play online musical instruments like guitar, piano, and violin for free. Record your sessions, download MP3s, and create BGM for reels and videos with PlayTune Studio.">
-    <meta name="keywords"
-        content="online musical instruments, play guitar online, online piano recorder, free bgm maker, virtual studio, music creator">
+    <title>PlayTune Studio | Virtual Instruments &amp; Online Music Creator</title>
+    <meta name="description" content="Play online musical instruments like guitar, piano, and violin for free. Record your sessions, download MP3s, and create BGM for reels and videos with PlayTune Studio.">
+    <meta name="keywords" content="online musical instruments, play guitar online, online piano recorder, free bgm maker, virtual studio, music creator">
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap"
-        rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&amp;family=Playfair+Display:ital,wght@0,700;1,700&amp;display=swap" rel="stylesheet">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -70,7 +64,11 @@
                     </div>
                     <div class="hero-visual">
                         <div class="visual-glow"></div>
-                        <img src="assets/playtune_studio_hero.png" alt="PlayTune Studio Dashboard" class="floating-img">
+                        <div class="decorative-piano">
+                            <!-- Visual placeholder for a professional look -->
+                            <div class="stat" style="position:absolute; bottom:20px; left:20px;">B4I Studio Engaged
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -144,7 +142,7 @@
                         <canvas id="recording-visualizer"></canvas>
                     </div>
                     <div class="recording-timer">00:00:00</div>
-                    <button id="stop-record" class="btn btn-danger">Stop & Save</button>
+                    <button id="stop-record" class="btn btn-danger">Stop &amp; Save</button>
                 </div>
             </section>
 
@@ -155,13 +153,12 @@
                     <p>Access and manage your recorded sessions.</p>
                 </div>
                 <div class="recordings-list" id="recordings-list">
-                    <!-- Dynamic Content -->
-                    <div class="empty-state">
-                        <i class="fas fa-music"></i>
-                        <p>No recordings yet. Start playing to create some magic!</p>
-                        <a href="#instruments" class="btn btn-primary">Load an Instrument</a>
-                    </div>
+                <div class="empty-state">
+                    <i class="fas fa-music"></i>
+                    <p>No recordings yet. Start playing to create some magic!</p>
+                    <a href="#instruments" class="btn btn-primary" onclick="document.querySelector('[href='#instruments']').click()">Load an Instrument</a>
                 </div>
+            </div>
             </section>
         </main>
 
@@ -191,6 +188,6 @@
     <script src="js/instruments.js"></script>
     <script src="js/recorder.js"></script>
     <script src="js/app.js"></script>
-</body>
 
-</html>
+
+</body></html>
