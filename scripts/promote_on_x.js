@@ -36,8 +36,9 @@ async function getTrends() {
 
     const trends = await page.evaluate(() => {
         // Collect the top trends from the first (most recent) card
-        const listItems = document.querySelectorAll('.trend-card:first-child li a');
-        return Array.from(listItems).map(item => item.textContent);
+        // Note: Selector updated as trends24.in structure changed
+        const listItems = document.querySelectorAll('.list-container:first-child .trend-link');
+        return Array.from(listItems).map(item => item.textContent.trim());
     });
 
     console.log('Current Trends:', trends);
