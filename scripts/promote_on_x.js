@@ -1,24 +1,36 @@
 const { chromium } = require('playwright');
 const { TwitterApi } = require('twitter-api-v2');
 
-// Keywords to identify music-related trends
+// Keywords to identify music and entertainment-related trends
 const MUSIC_KEYWORDS = [
-    'music', 'song', 'album', 'artist', 'single', 'release', 'track', 'concert', 
+    // Core Music
+    'music', 'song', 'album', 'artist', 'single', 'release', 'track', 'concert',
     'spotify', 'youtube', 'vibe', 'soundtrack', 'ost', 'bgm', 'lyrical', 'video',
     'listen', 'remix', 'singer', 'rapper', 'melody', 'tune', 'piano', 'guitar',
+    'musician', 'band', 'performance', 'live', 'stage', 'musical', 'instrument',
     'thaman', 'anirudh', 'rahman', 'devi sri prasad', 'sid sriram', 'arijit', // Popular in India
-    'Taylor Swift', 'BTS', 'Blackpink', 'Drake', 'Weeknd' // Global
+    'Taylor Swift', 'BTS', 'Blackpink', 'Drake', 'Weeknd', // Global
+
+    // Entertainment & Movies
+    'entertainment', 'celebrity', 'actor', 'actress', 'film', 'movie', 'cinema',
+    'trailer', 'teaser', 'premiere', 'blockbuster', 'sandalwood', 'tollywood', 'bollywood',
+
+    // Religious Music / Devotional (as requested)
+    'jesus', 'christ', 'christian', 'worship', 'prayer', 'devotional', 'gospel', 'church', 'hymn',
+
+    // General Viral / Trending
+    'trending', 'viral', 'everyone', 'amazing', 'listen', 'hit', 'spectacular'
 ];
 
 async function getTrends() {
     console.log('Starting Trend Discovery via Playwright...');
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
-    
+
     // We use trends24.in as it's easier to scrape than X.com directly without login
     // Targetting India as the user seems to be based there, but this can be changed
     await page.goto('https://trends24.in/india/');
-    
+
     // Wait for the list to load
     await page.waitForSelector('.trend-card__list');
 
@@ -47,7 +59,7 @@ function findMusicTrend(trends) {
 
 async function postTweetViaPlaywright(tweetText) {
     console.log('Attempting to post via Playwright (Browser Automation)...');
-    
+
     if (!process.env.X_USERNAME || !process.env.X_PASSWORD) {
         throw new Error('X_USERNAME and X_PASSWORD environment variables are required for Playwright posting.');
     }
@@ -60,7 +72,7 @@ async function postTweetViaPlaywright(tweetText) {
 
     try {
         await page.goto('https://x.com/i/flow/login');
-        
+
         // Wait for input (username)
         const usernameInput = page.locator('input[autocomplete="username"]');
         await usernameInput.waitFor({ timeout: 10000 });
@@ -91,18 +103,18 @@ async function postTweetViaPlaywright(tweetText) {
 
         // Wait for home page
         await page.waitForSelector('[data-testid="SideNav_NewTweet_Button"]', { timeout: 15000 });
-        
+
         // Click compose
         await page.click('[data-testid="SideNav_NewTweet_Button"]');
-        
+
         // Type tweet
         const editor = page.locator('[data-testid="tweetTextarea_0"]');
         await editor.waitFor();
         await editor.fill(tweetText);
-        
+
         // Send
         await page.click('[data-testid="tweetButton"]');
-        
+
         // Wait for confirmation or redirect
         await page.waitForTimeout(3000);
         console.log('Tweet posted successfully via Playwright!');
@@ -117,7 +129,7 @@ async function postTweetViaPlaywright(tweetText) {
 
 async function postTweetViaAPI(tweetText) {
     console.log('Attempting to post via Twitter API...');
-    
+
     const client = new TwitterApi({
         appKey: process.env.TWITTER_API_KEY,
         appSecret: process.env.TWITTER_API_SECRET,
@@ -138,16 +150,17 @@ async function main() {
     try {
         const trends = await getTrends();
         const match = findMusicTrend(trends);
-        
+
         if (match) {
             console.log(`Matched Trend: ${match.trend} (Keyword: ${match.keyword})`);
-            
+
             const promotionalMessages = [
                 `Loving the vibe of ${match.trend}? 🎶 Create your own tunes and unleash your inner composer on PlayTune Studio! 🎹✨ \n\nTry it now: https://b4iborn.com \n\n#${match.trend.replace(/\s/g, '')} #Music #Creativity #PlayTune`,
-                `Everyone's talking about ${match.trend}! If you love music, you'll love playing the virtual instruments at PlayTune Studio. 🎸🎹 \n\nPlay here: https://b4iborn.com \n\n#${match.trend.replace(/\s/g, '')} #MusicLover #OnlinePiano`,
-                `Ride the wave of ${match.trend} with some music recreation! 🎼 Check out our online instruments at b4iborn.com. \n\n#${match.trend.replace(/\s/g, '')} #MusicTrends #PlayTune`
+                `Everyone's talking about ${match.trend}! If you love music or movies, you'll love playing virtual instruments at PlayTune Studio. 🎸🎹 \n\nPlay here: https://b4iborn.com \n\n#${match.trend.replace(/\s/g, '')} #Entertainment #OnlinePiano`,
+                `Ride the wave of ${match.trend} with some soulful music! 🎼 Check out our virtual piano and instruments at b4iborn.com. Perfect for worship and creativity! 🕊️ \n\n#${match.trend.replace(/\s/g, '')} #MusicTrends #PlayTune`,
+                `Inspired by ${match.trend}? 🌟 Music connects us all. Compose your own masterpiece on the fly at PlayTune Studio! 🎼🎻 \n\nGet started: https://b4iborn.com \n\n#${match.trend.replace(/\s/g, '')} #Trending #MusicLover`
             ];
-            
+
             const tweetText = promotionalMessages[Math.floor(Math.random() * promotionalMessages.length)];
             console.log('Draft Tweet:', tweetText);
 
