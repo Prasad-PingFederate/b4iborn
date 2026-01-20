@@ -1,0 +1,17 @@
+{
+  "name": "playtune-studio",
+  "version": "1.0.0",
+  "description": "PlayTune Studio with Social Automation",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "promote": "node scripts/promote_on_x.js"
+  },
+  "dependencies": {
+    "playwright": "^1.40.0",
+    "twitter-api-v2": "^1.15.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
