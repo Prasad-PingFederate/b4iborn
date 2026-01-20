@@ -9,6 +9,7 @@ on:
 jobs:
   promote:
     runs-on: ubuntu-latest
+    environment: X_bearerToken
     
     steps:
     - name: Checkout repository
