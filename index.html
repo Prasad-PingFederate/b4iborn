@@ -4,11 +4,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PlayTune Studio | Virtual Instruments & Online Music Creator</title>
+    <title>PlayTune Studio | #1 Virtual Musical Instruments & Online Music Production</title>
     <meta name="description"
-        content="Play online musical instruments like guitar, piano, and violin for free. Record your sessions, download MP3s, and create BGM for reels and videos with PlayTune Studio.">
+        content="Play professional virtual musical instruments online for free. Features a pro online piano, realistic drum studio, virtuoso violin, and acoustic guitar. Record high-quality sessions, download MP3s, and create background music for YouTube and Reels directly in your browser.">
     <meta name="keywords"
-        content="online musical instruments, play guitar online, online piano recorder, free bgm maker, virtual studio, music creator">
+        content="virtual musical instruments, online piano, play drums online, virtual violin, online guitar, music recorder, background music maker, free online daw, browser music studio, b4i playtune">
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-JJHB8KWZPJ"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-JJHB8KWZPJ');
+    </script>
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://b4iborn.com/">
+    <meta property="og:title" content="PlayTune Studio | #1 Virtual Musical Instruments & Online Music Production">
+    <meta property="og:description"
+        content="Play, record, and create music with professional-grade virtual instruments in your browser. Piano, Drums, Violin, and more.">
+    <meta property="og:image" content="https://b4iborn.com/assets/seo-preview.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://b4iborn.com/">
+    <meta property="twitter:title" content="PlayTune Studio | Virtual Musical Instruments">
+    <meta property="twitter:description"
+        content="Professional-grade virtual musical instruments you can play and record in your browser.">
+    <meta property="twitter:image" content="https://b4iborn.com/assets/seo-preview.png">
+
+    <!-- Canonical Link -->
+    <link rel="canonical" href="https://b4iborn.com/" />
+
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "PlayTune Studio",
+      "url": "https://b4iborn.com",
+      "description": "Professional virtual musical instruments and online music recording studio.",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "All",
+      "browserRequirements": "Requires JavaScript and HTML5 Audio API",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -120,7 +168,7 @@
                     <div class="instrument-card" data-instrument="panFlute">
                         <div class="card-icon"><i class="fas fa-wind"></i></div>
                         <h3>Pan Flute</h3>
-                        <p>15-Pipe Andean wind instrument with bamboo finish.</p>
+                        <p>Traditional Andean wind instrument.</p>
                         <button class="btn btn-sm btn-outline">Load Studio</button>
                     </div>
                     <div class="instrument-card" data-instrument="flute">
@@ -134,6 +182,7 @@
                         <h3>Clarinet</h3>
                         <p>Single-reed woodwind instrument.</p>
                         <button class="btn btn-sm btn-outline">Load Studio</button>
+                    </div>
                     <div class="instrument-card" data-instrument="recorder">
                         <div class="card-icon"><i class="fas fa-wind"></i></div>
                         <h3>Soprano Recorder</h3>
@@ -172,31 +221,32 @@
                 <div class="studio-header">
                     <button id="exit-studio" class="btn btn-icon"><i class="fas fa-arrow-left"></i></button>
                     <h2 id="active-instrument-name">Grand Piano</h2>
-                    <div class="studio-controls">
-                        <div class="metronome-control">
-                            <i class="fas fa-clock"></i>
-                            <input type="number" id="bpm-input" value="120" min="40" max="240">
-                            <span>BPM</span>
-                        </div>
-                        <button id="record-btn" class="btn btn-round btn-record">
-                            <i class="fas fa-circle"></i>
-                        </button>
+                    <div class="metronome-control">
+                        <i class="fas fa-clock"></i>
+                        <input type="number" id="bpm-input" value="120" min="40" max="240">
+                        <span>BPM</span>
                     </div>
                 </div>
 
                 <div class="instrument-canvas-container">
+                    <!-- Global Floating Studio Controls -->
+                    <div class="global-studio-controls">
+                        <button id="record-btn" class="btn-studio-record" title="Start Recording">
+                            <i class="fas fa-circle"></i>
+                        </button>
+
+                        <div class="compact-recording-tray hide">
+                            <div class="recording-timer">00:00:00</div>
+                            <button id="stop-record" class="btn-studio-stop" title="Stop & Save">
+                                <i class="fas fa-square"></i>
+                            </button>
+                            <canvas id="recording-visualizer"></canvas>
+                        </div>
+                    </div>
                     <!-- Instruments will be rendered here dynamically via JS -->
                     <div id="piano-view" class="instrument-view active">
-                        <div class="piano-keys-container"></div>
+                        <!-- Placeholder that gets replaced by js/instruments.js -->
                     </div>
-                </div>
-
-                <div class="recording-tray hide">
-                    <div class="visualizer-container">
-                        <canvas id="recording-visualizer"></canvas>
-                    </div>
-                    <div class="recording-timer">00:00:00</div>
-                    <button id="stop-record" class="btn btn-danger">Stop & Save</button>
                 </div>
             </section>
 
@@ -212,6 +262,41 @@
                         <i class="fas fa-music"></i>
                         <p>No recordings yet. Start playing to create some magic!</p>
                         <a href="#instruments" class="btn btn-primary">Load an Instrument</a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SEO Content Section -->
+            <section id="about" class="page-section seo-footer-content">
+                <div class="section-header">
+                    <h2 class="title">The Ultimate <span class="gradient-text">Virtual Music Studio</span></h2>
+                </div>
+                <div class="seo-grid">
+                    <div class="seo-text-block">
+                        <h3>Play Musical Instruments Online</h3>
+                        <p>PlayTune Studio provides a professional-grade suite of <strong>virtual musical
+                                instruments</strong> accessible directly in your web browser. Whether you're looking for
+                            an <strong>online piano</strong>, a realistic <strong>drum kit</strong>, or a
+                            <strong>virtuoso violin</strong>, our HTML5 Web Audio engine delivers crystal-clear sound
+                            quality without any lag.
+                        </p>
+                    </div>
+                    <div class="seo-text-block">
+                        <h3>Record & Create Music for Free</h3>
+                        <p>Our integrated <strong>music recorder</strong> allows you to capture your performances in
+                            high-quality MP3 format. Perfect for content creators looking to make unique
+                            <strong>background music (BGM)</strong> for YouTube, Instagram Reels, and TikTok. No
+                            software installation required.
+                        </p>
+                    </div>
+                    <div class="seo-text-block">
+                        <h3>Why Choose PlayTune Studio?</h3>
+                        <ul>
+                            <li><strong>Professional Audio:</strong> 44.1kHz sample rate synthesis.</li>
+                            <li><strong>Wide Variety:</strong> From Grand Piano to Latin Bongos.</li>
+                            <li><strong>Keyboard Support:</strong> Play like a pro using your computer keys.</li>
+                            <li><strong>100% Free:</strong> No hidden costs or subscriptions.</li>
+                        </ul>
                     </div>
                 </div>
             </section>

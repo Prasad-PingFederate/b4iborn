@@ -26,6 +26,15 @@ class AudioEngine {
         }
     }
 
+    getFreq(noteStr) {
+        if (!noteStr) return 440;
+        const note = noteStr.slice(0, -1);
+        const oct = parseInt(noteStr.slice(-1));
+        const notes = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+        const semiDist = (oct - 4) * 12 + notes.indexOf(note) - 9;
+        return 440 * Math.pow(2, semiDist / 12);
+    }
+
     // Professional Instrument Synthesis
     playNote(frequency, type = 'piano', duration = 0.5) {
         if (!this.ctx) this.init();
@@ -38,6 +47,12 @@ class AudioEngine {
         switch (type) {
             case 'piano':
                 this.createPianoSound(frequency, now, duration, gain);
+                break;
+            case 'jazz-piano':
+                this.createJazzPianoSound(frequency, now, duration, gain);
+                break;
+            case 'bright-piano':
+                this.createBrightPianoSound(frequency, now, duration, gain);
                 break;
             case 'drums':
                 this.createDrumSound(frequency, now, gain);
@@ -82,52 +97,59 @@ class AudioEngine {
         // 200=Low Tom, 300=Mid Tom, 400=High Tom
         // 4000=Crash, 5000=Ride
 
-        if (frequency === 60) { // KICK
+        if (frequency === 60 || frequency === 61) { // KICKS
             const osc = this.ctx.createOscillator();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(150, now);
-            osc.frequency.exponentialRampToValueAtTime(0.01, now + 0.5);
+            const fStart = frequency === 60 ? 150 : 180;
+            const decay = frequency === 60 ? 0.5 : 0.3;
+            osc.frequency.setValueAtTime(fStart, now);
+            osc.frequency.exponentialRampToValueAtTime(0.01, now + decay);
             gain.gain.setValueAtTime(1.5, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + decay);
             osc.connect(gain);
             osc.start(now);
-            osc.stop(now + 0.5);
+            osc.stop(now + decay);
         }
-        else if (frequency === 150) { // SNARE
+        else if (frequency === 150 || frequency === 151) { // SNARE / RIMSHOT
             // Body
             const osc = this.ctx.createOscillator();
-            osc.type = 'triangle';
-            osc.frequency.setValueAtTime(180, now);
+            osc.type = frequency === 150 ? 'triangle' : 'sine';
+            osc.frequency.setValueAtTime(frequency === 150 ? 180 : 350, now);
             const oscGain = this.ctx.createGain();
             oscGain.gain.setValueAtTime(0.5, now);
             oscGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
             osc.connect(oscGain);
             oscGain.connect(gain);
 
-            // Noise
-            const noise = this.ctx.createBufferSource();
-            const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.2, this.ctx.sampleRate);
-            const data = buffer.getChannelData(0);
-            for (let i = 0; i < buffer.length; i++) data[i] = Math.random() * 2 - 1;
-            noise.buffer = buffer;
-            const filter = this.ctx.createBiquadFilter();
-            filter.type = 'highpass';
-            filter.frequency.value = 1000;
-            noise.connect(filter);
-            filter.connect(gain);
-            gain.gain.setValueAtTime(1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-
+            // Noise for Snare
+            if (frequency === 150) {
+                const noise = this.ctx.createBufferSource();
+                const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.2, this.ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < buffer.length; i++) data[i] = Math.random() * 2 - 1;
+                noise.buffer = buffer;
+                const filter = this.ctx.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 1000;
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.gain.setValueAtTime(1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                noise.start(now); noise.stop(now + 0.2);
+            } else {
+                // Short click for rimshot
+                gain.gain.setValueAtTime(0.8, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+            }
             osc.start(now); osc.stop(now + 0.2);
-            noise.start(now); noise.stop(now + 0.2);
         }
-        else if (frequency >= 1000 && frequency < 2000) { // CIMBALS / HI-HATS
+        else if (frequency >= 1000 && frequency < 2000) { // CYMBALS / HI-HATS
             this.createCymbalSound(frequency, now, gain);
         }
         else if (frequency >= 200 && frequency < 500) { // TOMS
             this.createTomSound(frequency, now, gain);
         }
-        else if (frequency >= 4000) { // CRASH / RIDE
+        else if (frequency >= 4000) { // CRASH
             this.createCymbalSound(frequency, now, gain);
         }
         else { // CLAP
@@ -141,7 +163,6 @@ class AudioEngine {
             filter.frequency.value = 1500;
             noise.connect(filter);
             filter.connect(gain);
-            // Clap envelope (multiple bursts)
             gain.gain.setValueAtTime(0, now);
             gain.gain.linearRampToValueAtTime(0.8, now + 0.01);
             gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
@@ -165,7 +186,7 @@ class AudioEngine {
     }
 
     createCymbalSound(freq, now, gain) {
-        const duration = (freq === 4000 || freq === 5000) ? 1.5 : (freq === 1001 ? 0.5 : 0.1); // Crash/Ride long, OpenHat med, ClosedHat short
+        const duration = (freq === 4000 || freq === 5000) ? 2.5 : (freq === 1002 ? 1.8 : (freq === 1001 ? 0.8 : 0.1));
 
         // Metallic FM synthesis basis
         const fundamental = 40;
@@ -206,15 +227,128 @@ class AudioEngine {
     }
 
     createPianoSound(frequency, now, duration, gain) {
-        const osc = this.ctx.createOscillator();
-        osc.type = 'sine';
+        // Multi-harmonic synthesis for a richer piano sound
+        const harmonics = [
+            { ratio: 1.0, gain: 0.6 },
+            { ratio: 2.0, gain: 0.3 },
+            { ratio: 3.0, gain: 0.1 },
+            { ratio: 4.0, gain: 0.05 },
+            { ratio: 5.0, gain: 0.02 }
+        ];
+
+        harmonics.forEach(h => {
+            const osc = this.ctx.createOscillator();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(frequency * h.ratio, now);
+
+            const hGain = this.ctx.createGain();
+            hGain.gain.setValueAtTime(0, now);
+            hGain.gain.linearRampToValueAtTime(h.gain * 0.8, now + 0.01);
+            hGain.gain.exponentialRampToValueAtTime(0.001, now + duration * (1 - h.ratio * 0.1));
+
+            osc.connect(hGain);
+            hGain.connect(gain);
+            osc.start(now);
+            osc.stop(now + duration);
+        });
+
+        // Add "Hammer Strike" noise burst
+        const noise = this.ctx.createBufferSource();
+        const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * 0.05, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < buffer.length; i++) data[i] = Math.random() * 2 - 1;
+        noise.buffer = buffer;
+
+        const noiseFilter = this.ctx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.value = 1000;
+
+        const noiseGain = this.ctx.createGain();
+        noiseGain.gain.setValueAtTime(0.15, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+        noise.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(gain);
+        noise.start(now);
+
+        // Overall envelope
         gain.gain.setValueAtTime(0, now);
-        gain.gain.linearRampToValueAtTime(0.5, now + 0.01);
+        gain.gain.linearRampToValueAtTime(1, now + 0.005);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + duration * 1.5);
+    }
+
+    createBrightPianoSound(frequency, now, duration, gain) {
+        // Bright piano needs more high-end harmonics and a sharper attack
+        const fundamental = this.ctx.createOscillator();
+        fundamental.type = 'sawtooth';
+        fundamental.frequency.setValueAtTime(frequency, now);
+
+        const brightness = this.ctx.createOscillator();
+        brightness.type = 'square';
+        brightness.frequency.setValueAtTime(frequency * 2, now);
+
+        const fundGain = this.ctx.createGain();
+        fundGain.gain.setValueAtTime(0.4, now);
+
+        const brightGain = this.ctx.createGain();
+        brightGain.gain.setValueAtTime(0.2, now);
+        brightGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.setValueAtTime(200, now);
+
+        fundamental.connect(fundGain);
+        brightness.connect(brightGain);
+        fundGain.connect(filter);
+        brightGain.connect(filter);
+        filter.connect(gain);
+
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.6, now + 0.005);
         gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
-        osc.frequency.setValueAtTime(frequency, now);
-        osc.connect(gain);
-        osc.start(now);
-        osc.stop(now + duration);
+
+        fundamental.start(now);
+        fundamental.stop(now + duration);
+        brightness.start(now);
+        brightness.stop(now + duration);
+    }
+
+    createJazzPianoSound(frequency, now, duration, gain) {
+        // Jazz piano is warmer with a bit of "honky-tonk" or "vintage" feel
+        const harmonics = [
+            { ratio: 1.0, gain: 0.7, detune: 0 },
+            { ratio: 1.005, gain: 0.2, detune: 5 }, // Detuned for vintage feel
+            { ratio: 2.0, gain: 0.4, detune: 0 },
+            { ratio: 3.0, gain: 0.2, detune: 0 },
+            { ratio: 4.0, gain: 0.1, detune: 0 }
+        ];
+
+        harmonics.forEach(h => {
+            const osc = this.ctx.createOscillator();
+            osc.type = 'triangle'; // Warmer than sine
+            osc.frequency.setValueAtTime(frequency * h.ratio, now);
+            osc.detune.setValueAtTime(h.detune, now);
+
+            const hGain = this.ctx.createGain();
+            hGain.gain.setValueAtTime(0, now);
+            hGain.gain.linearRampToValueAtTime(h.gain * 0.5, now + 0.02);
+            hGain.gain.exponentialRampToValueAtTime(0.001, now + duration * 1.2);
+
+            osc.connect(hGain);
+            hGain.connect(gain);
+            osc.start(now);
+            osc.stop(now + duration * 1.2);
+        });
+
+        // Add a "Warmth" filter
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(3000, now);
+        filter.frequency.exponentialRampToValueAtTime(1000, now + duration);
+        gain.connect(filter);
+        filter.connect(this.masterVolume);
     }
 
     createSynthSound(frequency, now, duration, gain) {
@@ -235,31 +369,78 @@ class AudioEngine {
     }
 
     createGuitarSound(frequency, now, duration, gain) {
-        const osc = this.ctx.createOscillator();
-        osc.type = 'triangle';
+        // Multi-oscillator for richer resonance
+        const fundamental = this.ctx.createOscillator();
+        const overtone = this.ctx.createOscillator();
+
+        fundamental.type = 'triangle';
+        overtone.type = 'sine';
+
+        fundamental.frequency.setValueAtTime(frequency, now);
+        overtone.frequency.setValueAtTime(frequency * 2, now);
+
+        const fGain = this.ctx.createGain();
+        const oGain = this.ctx.createGain();
+
+        fGain.gain.setValueAtTime(0.5, now);
+        oGain.gain.setValueAtTime(0.2, now);
+
+        fundamental.connect(fGain);
+        overtone.connect(oGain);
+
+        fGain.connect(gain);
+        oGain.connect(gain);
+
         gain.gain.setValueAtTime(0, now);
-        gain.gain.linearRampToValueAtTime(0.4, now + 0.01);
-        gain.gain.exponentialRampToValueAtTime(0.01, now + duration * 2);
-        osc.frequency.setValueAtTime(frequency, now);
-        osc.connect(gain);
-        osc.start(now);
-        osc.stop(now + duration * 2);
+        gain.gain.linearRampToValueAtTime(0.6, now + 0.005);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + duration * 2.5);
+
+        fundamental.start(now);
+        fundamental.stop(now + duration * 2.5);
+        overtone.start(now);
+        overtone.stop(now + duration * 2.5);
     }
 
     createViolinSound(frequency, now, duration, gain) {
         const osc = this.ctx.createOscillator();
+        const sub = this.ctx.createOscillator();
+
         osc.type = 'sawtooth';
+        sub.type = 'triangle';
+
+        // Vibrato LFO
+        const lfo = this.ctx.createOscillator();
+        const lfoGain = this.ctx.createGain();
+        lfo.frequency.value = 5.5; // Vibrato depth
+        lfoGain.gain.value = frequency * 0.015;
+
+        lfo.connect(lfoGain);
+        lfoGain.connect(osc.frequency);
+        lfoGain.connect(sub.frequency);
+
+        osc.frequency.setValueAtTime(frequency, now);
+        sub.frequency.setValueAtTime(frequency * 1.002, now);
+
         const filter = this.ctx.createBiquadFilter();
         filter.type = "lowpass";
-        filter.frequency.value = 1000;
+        filter.frequency.setValueAtTime(3000, now);
+        filter.frequency.exponentialRampToValueAtTime(1200, now + duration);
+
         osc.connect(filter);
+        sub.connect(filter);
         filter.connect(gain);
+
         gain.gain.setValueAtTime(0, now);
-        gain.gain.linearRampToValueAtTime(0.2, now + 0.1);
-        gain.gain.linearRampToValueAtTime(0.01, now + duration);
-        osc.frequency.setValueAtTime(frequency, now);
+        gain.gain.linearRampToValueAtTime(0.3, now + 0.15); // Slow attack (bowing)
+        gain.gain.setValueAtTime(0.3, now + duration - 0.2);
+        gain.gain.linearRampToValueAtTime(0, now + duration);
+
+        lfo.start(now);
+        lfo.stop(now + duration);
         osc.start(now);
         osc.stop(now + duration);
+        sub.start(now);
+        sub.stop(now + duration);
     }
 
     createPanFluteSound(frequency, now, duration, gain) {

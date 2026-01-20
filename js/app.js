@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const exitStudio = document.getElementById('exit-studio');
     const recordBtn = document.getElementById('record-btn');
     const stopRecordBtn = document.getElementById('stop-record');
-    const recordingTray = document.querySelector('.recording-tray');
+    const recordingTray = document.querySelector('.compact-recording-tray');
     const bpmInput = document.getElementById('bpm-input');
 
     let recorder = null;
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update Nav
         navLinks.forEach(link => {
             link.classList.remove('active');
-            if (link.getAttribute('href') === "#" + sectionId) link.classList.add('active');
+            if (link.getAttribute('href') === `#${sectionId}`) link.classList.add('active');
         });
 
         window.scrollTo(0, 0);
@@ -100,14 +100,14 @@ document.addEventListener('DOMContentLoaded', () => {
     recordBtn.addEventListener('click', () => {
         if (!recorder) return;
         recorder.start();
-        recordBtn.classList.add('recording');
+        recordBtn.classList.add('hide');
         recordingTray.classList.remove('hide');
     });
 
     stopRecordBtn.addEventListener('click', () => {
         if (!recorder) return;
         recorder.stop();
-        recordBtn.classList.remove('recording');
+        recordBtn.classList.remove('hide');
         recordingTray.classList.add('hide');
         showSection('my-recordings');
         renderRecordings();
@@ -119,11 +119,29 @@ document.addEventListener('DOMContentLoaded', () => {
         const recordings = JSON.parse(localStorage.getItem('recordings') || '[]');
 
         if (recordings.length === 0) {
-            list.innerHTML = '<div class="empty-state"><i class="fas fa-music"></i><p>No recordings yet. Start playing to create some magic!</p><a href="#instruments" class="btn btn-primary" onclick="document.querySelector(\'[href=\\\'#instruments\\\']\').click()">Load an Instrument</a></div>';
+            list.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-music"></i>
+                    <p>No recordings yet. Start playing to create some magic!</p>
+                    <a href="#instruments" class="btn btn-primary" onclick="document.querySelector('[href=\'#instruments\']').click()">Load an Instrument</a>
+                </div>
+            `;
             return;
         }
 
-        list.innerHTML = recordings.map(rec => '<div class="recording-item"><div class="rec-info"><h4>' + rec.name + '</h4><span>' + rec.date + '</span></div><div class="rec-actions"><audio src="' + rec.url + '" controls></audio><a href="' + rec.url + '" download="' + rec.name + '.wav" class="btn btn-sm btn-primary">Download</a><button class="btn btn-sm btn-danger" onclick="deleteRecording(' + rec.id + ')">Delete</button></div></div>').join('');
+        list.innerHTML = recordings.map(rec => `
+            <div class="recording-item">
+                <div class="rec-info">
+                    <h4>${rec.name}</h4>
+                    <span>${rec.date}</span>
+                </div>
+                <div class="rec-actions">
+                    <audio src="${rec.url}" controls></audio>
+                    <a href="${rec.url}" download="${rec.name}.wav" class="btn btn-sm btn-primary">Download</a>
+                    <button class="btn btn-sm btn-danger" onclick="deleteRecording(${rec.id})">Delete</button>
+                </div>
+            </div>
+        `).join('');
     }
 
     window.deleteRecording = (id) => {
@@ -135,4 +153,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial Render
     renderRecordings();
+
+    // Environment Detection for Dev Mode
+    if (window.location.hostname.includes('vercel.app')) {
+        const banner = document.createElement('div');
+        banner.className = 'dev-banner';
+        banner.innerHTML = '<i class="fas fa-tools"></i> Dev Mode';
+        document.body.appendChild(banner);
+    }
 });
