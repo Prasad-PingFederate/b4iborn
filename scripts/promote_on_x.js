@@ -94,24 +94,24 @@ async function postTweetViaPlaywright(tweetText) {
 
         // Check for unusual activity warning (asking for email/phone)
         try {
-            // Wait a bit to see if challenge appears
-            await page.waitForTimeout(2000);
+            await page.waitForTimeout(3000);
+            const bodyText = await page.innerText('body');
 
-            const unusualActivity = await page.$('text=verification, text=phone or email, text=suspicious');
-            if (unusualActivity) {
+            if (bodyText.includes('verification') || bodyText.includes('Enter your phone') || bodyText.includes('Suspicious activity') || bodyText.includes('identity')) {
                 console.log('X flagged unusual activity. Attempting to verify with X_EMAIL...');
                 if (process.env.X_EMAIL) {
-                    const emailInput = page.locator('input[name="text"], input[data-testid="challenge_response"]');
-                    await emailInput.waitFor({ timeout: 5000 });
-                    await emailInput.fill(process.env.X_EMAIL);
+                    const identityInput = page.locator('input[name="text"], input[data-testid="challenge_response"], input[autocomplete="email"]');
+                    await identityInput.first().waitFor({ timeout: 5000 });
+                    await identityInput.first().fill(process.env.X_EMAIL);
                     await page.keyboard.press('Enter');
-                    await page.waitForTimeout(2000);
+                    console.log('Submitted X_EMAIL for verification.');
+                    await page.waitForTimeout(3000);
                 } else {
-                    console.error('X_EMAIL environment variable is missing - cannot solve challenge.');
+                    console.error('X_EMAIL environment variable is missing - check your GitHub Secrets.');
                 }
             }
         } catch (e) {
-            console.log('No unusual activity prompt detected or handled:', e.message);
+            console.log('Challenge check completed or timed out (might not be needed):', e.message);
         }
 
         // Wait for password
