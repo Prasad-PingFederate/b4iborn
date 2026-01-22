@@ -36,4 +36,5 @@ jobs:
         X_USERNAME: ${{ secrets.X_USERNAME }}
         X_PASSWORD: ${{ secrets.X_PASSWORD }}
         X_EMAIL: ${{ secrets.X_EMAIL }} # Optional, for verification challenges
+        PREFER_PLAYWRIGHT: ${{ vars.PREFER_PLAYWRIGHT || secrets.PREFER_PLAYWRIGHT || 'true' }}
       run: npm run promote
