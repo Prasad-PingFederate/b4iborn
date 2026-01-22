@@ -9,41 +9,53 @@ const MUSIC_KEYWORDS = [
     'listen', 'remix', 'singer', 'rapper', 'melody', 'tune', 'piano', 'guitar',
     'musician', 'band', 'performance', 'live', 'stage', 'musical', 'instrument',
     'thaman', 'anirudh', 'rahman', 'devi sri prasad', 'sid sriram', 'arijit', // Popular in India
+    'Justin Bieber', 'Ed Sheeran', 'Dua Lipa', 'Adele', 'Bruno Mars',
     'Taylor Swift', 'BTS', 'Blackpink', 'Drake', 'Weeknd', // Global
 
     // Entertainment & Movies
     'entertainment', 'celebrity', 'actor', 'actress', 'film', 'movie', 'cinema',
     'trailer', 'teaser', 'premiere', 'blockbuster', 'sandalwood', 'tollywood', 'bollywood',
+    'hollywood', 'netflix', 'disney', 'marvel', 'streaming', 'awards', 'oscar',
 
     // Religious Music / Devotional (as requested)
     'jesus', 'christ', 'christian', 'worship', 'prayer', 'devotional', 'gospel', 'church', 'hymn',
+    'praise', 'spiritual', 'bible', 'scripture', 'blessing', 'faith', 'lord',
 
     // General Viral / Trending
-    'trending', 'viral', 'everyone', 'amazing', 'listen', 'hit', 'spectacular'
+    'trending', 'viral', 'everyone', 'amazing', 'listen', 'hit', 'spectacular', 'wow', 'incredible'
 ];
 
-async function getTrends() {
-    console.log('Starting Trend Discovery via Playwright...');
+const LOCATIONS = [
+    { name: 'India', path: 'india/' },
+    { name: 'USA', path: 'united-states/' },
+    { name: 'UK', path: 'united-kingdom/' },
+    { name: 'Global', path: '' } // Trends24 home is global
+];
+
+async function getTrends(locationPath = 'india/') {
+    console.log(`Starting Trend Discovery for ${locationPath || 'Global'} via Playwright...`);
     const browser = await chromium.launch({ headless: true });
     const page = await browser.newPage();
 
-    // We use trends24.in as it's easier to scrape than X.com directly without login
-    // Targetting India as the user seems to be based there, but this can be changed
-    await page.goto('https://trends24.in/india/');
+    try {
+        await page.goto(`https://trends24.in/${locationPath}`, { waitUntil: 'domcontentloaded' });
 
-    // Wait for the list to load
-    await page.waitForSelector('.trend-card__list');
+        // Wait for the list to load
+        await page.waitForSelector('.trend-card__list', { timeout: 10000 });
 
-    const trends = await page.evaluate(() => {
-        // Collect the top trends from the first (most recent) card
-        // Note: Selector updated as trends24.in structure changed
-        const listItems = document.querySelectorAll('.list-container:first-child .trend-link');
-        return Array.from(listItems).map(item => item.textContent.trim());
-    });
+        const trends = await page.evaluate(() => {
+            const listItems = document.querySelectorAll('.list-container:first-child .trend-link');
+            return Array.from(listItems).map(item => item.textContent.trim());
+        });
 
-    console.log('Current Trends:', trends);
-    await browser.close();
-    return trends;
+        console.log(`Trends found:`, trends.length > 0 ? trends.slice(0, 5).join(', ') + '...' : 'None');
+        return trends;
+    } catch (error) {
+        console.error(`Error fetching trends for ${locationPath}:`, error.message);
+        return [];
+    } finally {
+        await browser.close();
+    }
 }
 
 function findMusicTrend(trends) {
@@ -141,20 +153,33 @@ async function postTweetViaAPI(tweetText) {
     try {
         await client.v2.tweet(tweetText);
         console.log('Tweet posted successfully via API!');
+        return true;
     } catch (error) {
-        console.error('Failed to post via API:', error);
-        throw error;
+        if (error.code === 403) {
+            console.error('ERROR 403: Forbidden. Your X Developer App may have "Read-only" permissions or incorrect credentials.');
+            console.error('Check: https://developer.twitter.com/en/portal/dashboard');
+        } else {
+            console.error('Failed to post via API:', error.message);
+        }
+        return false;
     }
 }
 
 async function main() {
     try {
-        const trends = await getTrends();
-        const match = findMusicTrend(trends);
+        let match = null;
+
+        // Try searching trends by location until we find a match
+        for (const loc of LOCATIONS) {
+            const trends = await getTrends(loc.path);
+            match = findMusicTrend(trends);
+            if (match) {
+                console.log(`Matched Trend in ${loc.name}: ${match.trend} (Keyword: ${match.keyword})`);
+                break;
+            }
+        }
 
         if (match) {
-            console.log(`Matched Trend: ${match.trend} (Keyword: ${match.keyword})`);
-
             const promotionalMessages = [
                 `Loving the vibe of ${match.trend}? 🎶 Create your own tunes and unleash your inner composer on PlayTune Studio! 🎹✨ \n\nTry it now: https://b4iborn.com \n\n#${match.trend.replace(/\s/g, '')} #Music #Creativity #PlayTune`,
                 `Everyone's talking about ${match.trend}! If you love music or movies, you'll love playing virtual instruments at PlayTune Studio. 🎸🎹 \n\nPlay here: https://b4iborn.com \n\n#${match.trend.replace(/\s/g, '')} #Entertainment #OnlinePiano`,
@@ -170,22 +195,34 @@ async function main() {
                 return;
             }
 
-            // Priority: API > Playwright
+            // Attempt to post: API first, then Playwright fallback
+            let posted = false;
+
             if (process.env.TWITTER_API_KEY) {
-                await postTweetViaAPI(tweetText);
-            } else if (process.env.X_USERNAME) {
-                await postTweetViaPlaywright(tweetText);
-            } else {
-                console.error('No credentials found! Set TWITTER_API_* keys OR X_USERNAME/X_PASSWORD in environment.');
+                posted = await postTweetViaAPI(tweetText);
+            }
+
+            if (!posted && process.env.X_USERNAME) {
+                console.log('Falling back to Playwright (Browser Automation) for posting...');
+                try {
+                    await postTweetViaPlaywright(tweetText);
+                    posted = true;
+                } catch (pwError) {
+                    console.error('Playwright post also failed.');
+                }
+            }
+
+            if (!posted) {
+                console.error('Failed to post tweet via both API and Browser Automation.');
                 process.exit(1);
             }
 
         } else {
-            console.log('No music-related trends found at this time.');
+            console.log('No relevant trends found in any of the targeted locations.');
         }
 
     } catch (error) {
-        console.error('Error running promotion script:', error);
+        console.error('Critical internal error:', error);
         process.exit(1);
     }
 }
