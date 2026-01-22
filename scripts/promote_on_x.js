@@ -96,8 +96,10 @@ async function postTweetViaPlaywright(tweetText) {
             }
         }
 
-        await page.goto('https://x.com/home', { waitUntil: 'networkidle', timeout: 60000 });
-        await page.waitForTimeout(5000);
+        // Relaxed navigation for slow CI environments
+        await page.goto('https://x.com/home', { waitUntil: 'domcontentloaded', timeout: 120000 });
+        console.log('Page navigation to x.com/home initiated. Waiting for specific elements...');
+        await page.waitForTimeout(10000); // 10s wait for dynamic content
 
         // Check if we are already logged in
         const tweetButtonLocator = page.locator('[data-testid="SideNav_NewTweet_Button"], [data-testid="AppTabBar_Home_Link"]');
@@ -106,7 +108,7 @@ async function postTweetViaPlaywright(tweetText) {
             loginSuccess = true;
         } else {
             console.log('Session cookies expired or missing. Proceeding to standard login...');
-            await page.goto('https://x.com/i/flow/login', { waitUntil: 'networkidle', timeout: 60000 });
+            await page.goto('https://x.com/i/flow/login', { waitUntil: 'domcontentloaded', timeout: 120000 });
 
             // Wait for input (username)
             const usernameInput = page.locator('input[autocomplete="username"]');
