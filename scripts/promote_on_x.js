@@ -185,10 +185,12 @@ async function postTweetViaPlaywright(tweetText) {
 
         const editor = page.locator('[data-testid="tweetTextarea_0"]').first();
         await editor.waitFor();
-        // Add a unique ID to prevent X from blocking it as a "duplicate"
-        const finalTweet = `${tweetText}\n\n[id: ${Math.random().toString(36).substring(7)}]`;
+        // Use a random music emoji to keep the tweet unique without a visible ID string
+        const musicEmojis = ['🎸', '🎹', '🎶', '🎵', '🎼', '🎻', '🎷', '🎺', '🎸', '🎧'];
+        const randomEmoji = musicEmojis[Math.floor(Math.random() * musicEmojis.length)];
+        const finalTweet = `${tweetText} ${randomEmoji}`;
         await editor.fill(finalTweet);
-        console.log(`Prepared tweet with unique ID: ${finalTweet}`);
+        console.log(`Prepared polished tweet: ${finalTweet}`);
 
         await page.waitForTimeout(2000); // Small wait for button to activate
 
