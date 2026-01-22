@@ -94,18 +94,24 @@ async function postTweetViaPlaywright(tweetText) {
 
         // Check for unusual activity warning (asking for email/phone)
         try {
-            const unusualActivity = await page.waitForSelector('text=phone or email', { timeout: 3000 });
+            // Wait a bit to see if challenge appears
+            await page.waitForTimeout(2000);
+
+            const unusualActivity = await page.$('text=verification, text=phone or email, text=suspicious');
             if (unusualActivity) {
-                console.log('X asked for verification (unusual activity).');
-                // If you have an email env var, you could fill it here, but it's complex
+                console.log('X flagged unusual activity. Attempting to verify with X_EMAIL...');
                 if (process.env.X_EMAIL) {
-                    const input = page.locator('input[name="text"]');
-                    await input.fill(process.env.X_EMAIL);
+                    const emailInput = page.locator('input[name="text"], input[data-testid="challenge_response"]');
+                    await emailInput.waitFor({ timeout: 5000 });
+                    await emailInput.fill(process.env.X_EMAIL);
                     await page.keyboard.press('Enter');
+                    await page.waitForTimeout(2000);
+                } else {
+                    console.error('X_EMAIL environment variable is missing - cannot solve challenge.');
                 }
             }
         } catch (e) {
-            // No unusual activity prompt, continue
+            console.log('No unusual activity prompt detected or handled:', e.message);
         }
 
         // Wait for password
@@ -134,6 +140,13 @@ async function postTweetViaPlaywright(tweetText) {
 
     } catch (error) {
         console.error('Failed to post via Playwright:', error);
+        // Save a screenshot for debugging on GitHub Actions
+        try {
+            await page.screenshot({ path: 'playwright-failure.png', fullPage: true });
+            console.log('Screenshot of failure saved to playwright-failure.png');
+        } catch (screenshotError) {
+            console.error('Failed to capture screenshot:', screenshotError);
+        }
         throw error;
     } finally {
         await browser.close();
