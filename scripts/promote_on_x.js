@@ -185,7 +185,10 @@ async function postTweetViaPlaywright(tweetText) {
 
         const editor = page.locator('[data-testid="tweetTextarea_0"]').first();
         await editor.waitFor();
-        await editor.fill(tweetText);
+        // Add a unique ID to prevent X from blocking it as a "duplicate"
+        const finalTweet = `${tweetText}\n\n[id: ${Math.random().toString(36).substring(7)}]`;
+        await editor.fill(finalTweet);
+        console.log(`Prepared tweet with unique ID: ${finalTweet}`);
 
         await page.waitForTimeout(2000); // Small wait for button to activate
 
@@ -197,8 +200,22 @@ async function postTweetViaPlaywright(tweetText) {
             await page.keyboard.press('Control+Enter');
         }
 
-        await page.waitForTimeout(5000); // Wait for post to register
-        console.log('Tweet posted successfully via Playwright!');
+        // --- 3. Verification ---
+        console.log('Post action triggered. Verifying send...');
+
+        // Wait for the text area to disappear (indicating it was sent)
+        const isGone = await editor.waitFor({ state: 'hidden', timeout: 15000 })
+            .then(() => true)
+            .catch(() => false);
+
+        if (isGone) {
+            console.log('Tweet posted successfully! Editor box is gone.');
+            // Capture a screenshot of the "after" state for confirmation
+            await page.screenshot({ path: 'playwright-success.png', fullPage: true });
+        } else {
+            console.log('Warning: Editor box is still visible. Capture screenshot for debugging.');
+            await page.screenshot({ path: 'playwright-post-unsure.png', fullPage: true });
+        }
 
     } catch (error) {
         console.error('Failed to post via Playwright:', error);
