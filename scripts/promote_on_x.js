@@ -187,8 +187,17 @@ async function postTweetViaPlaywright(tweetText) {
         await editor.waitFor();
         await editor.fill(tweetText);
 
-        await page.click('[data-testid="tweetButton"]');
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(2000); // Small wait for button to activate
+
+        try {
+            // Attempt to click with 'force: true' to bypass overlays
+            await page.click('[data-testid="tweetButton"]', { force: true, timeout: 5000 });
+        } catch (clickError) {
+            console.log('Click intercepted or failed, attempting keyboard shortcut (Control+Enter)...');
+            await page.keyboard.press('Control+Enter');
+        }
+
+        await page.waitForTimeout(5000); // Wait for post to register
         console.log('Tweet posted successfully via Playwright!');
 
     } catch (error) {
