@@ -92,33 +92,64 @@ async function postTweetViaPlaywright(tweetText) {
         await usernameInput.fill(process.env.X_USERNAME);
         await page.keyboard.press('Enter');
 
-        // Check for unusual activity warning (asking for email/phone)
-        try {
-            await page.waitForTimeout(3000);
-            const bodyText = await page.innerText('body');
+        // Multi-stage login handler (handles verification, password, and redundant prompts)
+        console.log('Username submitted. Entering multi-stage login handler...');
+        let loginSuccess = false;
 
-            if (bodyText.includes('verification') || bodyText.includes('Enter your phone') || bodyText.includes('Suspicious activity') || bodyText.includes('identity')) {
-                console.log('X flagged unusual activity. Attempting to verify with X_EMAIL...');
+        for (let i = 0; i < 5; i++) {
+            await page.waitForTimeout(3000);
+            const currentUrl = page.url();
+            const bodyText = await page.innerText('body');
+            console.log(`Login Step ${i + 1} | URL: ${currentUrl}`);
+
+            // 1. Password Screen
+            const passwordInput = page.locator('input[name="password"]');
+            if (await passwordInput.isVisible()) {
+                console.log('Password field detected. Entering password...');
+                await passwordInput.fill(process.env.X_PASSWORD);
+                await page.keyboard.press('Enter');
+                await page.waitForTimeout(2000);
+                continue;
+            }
+
+            // 2. Identity Verification (Email/Username/Phone)
+            if (bodyText.includes('verification') || bodyText.includes('identity') || bodyText.includes('suspicious') || bodyText.includes('phone or email') || bodyText.includes('check your email')) {
+                console.log('Identity challenge detected. Attempting to solve...');
                 if (process.env.X_EMAIL) {
-                    const identityInput = page.locator('input[name="text"], input[data-testid="challenge_response"], input[autocomplete="email"]');
-                    await identityInput.first().waitFor({ timeout: 5000 });
-                    await identityInput.first().fill(process.env.X_EMAIL);
-                    await page.keyboard.press('Enter');
-                    console.log('Submitted X_EMAIL for verification.');
-                    await page.waitForTimeout(3000);
+                    const idInput = page.locator('input[name="text"], input[data-testid="challenge_response"], input[autocomplete="email"]');
+                    if (await idInput.first().isVisible()) {
+                        await idInput.first().fill(process.env.X_EMAIL);
+                        await page.keyboard.press('Enter');
+                        console.log('Submitted X_EMAIL for verification.');
+                        await page.waitForTimeout(3000);
+                        continue;
+                    }
                 } else {
-                    console.error('X_EMAIL environment variable is missing - check your GitHub Secrets.');
+                    console.error('X_EMAIL missing - cannot solve challenge.');
                 }
             }
-        } catch (e) {
-            console.log('Challenge check completed or timed out (might not be needed):', e.message);
+
+            // 3. Just another Username prompt (redundant but happens)
+            const secondUsernameInput = page.locator('input[autocomplete="username"]');
+            if (await secondUsernameInput.isVisible()) {
+                console.log('Username requested again. Filling...');
+                await secondUsernameInput.fill(process.env.X_USERNAME);
+                await page.keyboard.press('Enter');
+                continue;
+            }
+
+            // 4. Check for success (home screen indicators)
+            if (await page.locator('[data-testid="SideNav_NewTweet_Button"]').isVisible() || currentUrl.includes('/home')) {
+                console.log('Login successful! Home screen detected.');
+                loginSuccess = true;
+                break;
+            }
         }
 
-        // Wait for password
-        const passwordInput = page.locator('input[name="password"]');
-        await passwordInput.waitFor({ timeout: 10000 });
-        await passwordInput.fill(process.env.X_PASSWORD);
-        await page.keyboard.press('Enter');
+        if (!loginSuccess) {
+            console.log('Waiting for Twitter Home feed (final check)...');
+            await page.waitForSelector('[data-testid="SideNav_NewTweet_Button"]', { timeout: 15000 });
+        }
 
         // Wait for home page
         await page.waitForSelector('[data-testid="SideNav_NewTweet_Button"]', { timeout: 15000 });
