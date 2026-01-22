@@ -83,6 +83,8 @@ async function postTweetViaPlaywright(tweetText) {
     });
     const page = await context.newPage();
 
+    let loginSuccess = false;
+
     try {
         // --- 1. Session Persistence (Cookie Injection) ---
         if (process.env.X_COOKIES) {
