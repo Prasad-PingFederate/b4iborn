@@ -183,7 +183,7 @@ async function postTweetViaPlaywright(tweetText) {
         await page.waitForSelector('[data-testid="SideNav_NewTweet_Button"]', { timeout: 15000 });
         await page.click('[data-testid="SideNav_NewTweet_Button"]');
 
-        const editor = page.locator('[data-testid="tweetTextarea_0"]');
+        const editor = page.locator('[data-testid="tweetTextarea_0"]').first();
         await editor.waitFor();
         await editor.fill(tweetText);
 
