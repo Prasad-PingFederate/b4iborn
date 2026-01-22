@@ -96,30 +96,31 @@ async function postTweetViaPlaywright(tweetText) {
             }
         }
 
-        await page.goto('https://x.com/home');
+        await page.goto('https://x.com/home', { waitUntil: 'networkidle', timeout: 60000 });
         await page.waitForTimeout(5000);
 
         // Check if we are already logged in
-        if (await page.locator('[data-testid="SideNav_NewTweet_Button"]').isVisible()) {
+        const tweetButtonLocator = page.locator('[data-testid="SideNav_NewTweet_Button"], [data-testid="AppTabBar_Home_Link"]');
+        if (await tweetButtonLocator.first().isVisible()) {
             console.log('Successfully bypassed login using session cookies!');
+            loginSuccess = true;
         } else {
             console.log('Session cookies expired or missing. Proceeding to standard login...');
-            await page.goto('https://x.com/i/flow/login');
+            await page.goto('https://x.com/i/flow/login', { waitUntil: 'networkidle', timeout: 60000 });
 
             // Wait for input (username)
             const usernameInput = page.locator('input[autocomplete="username"]');
-            await usernameInput.waitFor({ timeout: 15000 });
+            await usernameInput.waitFor({ timeout: 30000 });
             await usernameInput.fill(process.env.X_USERNAME);
             await page.keyboard.press('Enter');
 
             // Multi-stage login handler
             console.log('Username submitted. Entering multi-stage login handler...');
-            let loginSuccess = false;
 
-            for (let i = 0; i < 5; i++) {
-                await page.waitForTimeout(3000);
+            for (let i = 0; i < 7; i++) {
+                await page.waitForTimeout(5000);
                 const currentUrl = page.url();
-                const bodyText = await page.innerText('body');
+                const bodyText = await page.innerText('body').catch(() => '');
                 console.log(`Login Step ${i + 1} | URL: ${currentUrl}`);
 
                 // 1. Password Screen
@@ -128,12 +129,12 @@ async function postTweetViaPlaywright(tweetText) {
                     console.log('Password field detected. Entering password...');
                     await passwordInput.fill(process.env.X_PASSWORD);
                     await page.keyboard.press('Enter');
-                    await page.waitForTimeout(2000);
+                    await page.waitForTimeout(5000);
                     continue;
                 }
 
                 // 2. Identity Verification (Email/Username/Phone)
-                if (bodyText.includes('verification') || bodyText.includes('identity') || bodyText.includes('suspicious') || bodyText.includes('phone or email') || bodyText.includes('check your email')) {
+                if (bodyText.includes('verification') || bodyText.includes('identity') || bodyText.includes('suspicious') || bodyText.includes('phone or email') || bodyText.includes('check your email') || bodyText.includes('confirm your email')) {
                     console.log('Identity challenge detected. Attempting to solve...');
                     if (process.env.X_EMAIL) {
                         const idInput = page.locator('input[name="text"], input[data-testid="challenge_response"], input[autocomplete="email"]');
@@ -141,7 +142,7 @@ async function postTweetViaPlaywright(tweetText) {
                             await idInput.first().fill(process.env.X_EMAIL);
                             await page.keyboard.press('Enter');
                             console.log('Submitted X_EMAIL for verification.');
-                            await page.waitForTimeout(3000);
+                            await page.waitForTimeout(5000);
                             continue;
                         }
                     } else {
@@ -159,7 +160,7 @@ async function postTweetViaPlaywright(tweetText) {
                 }
 
                 // 4. Check for success
-                if (await page.locator('[data-testid="SideNav_NewTweet_Button"]').isVisible() || currentUrl.includes('/home')) {
+                if (await tweetButtonLocator.first().isVisible() || currentUrl.includes('/home')) {
                     console.log('Login successful! Home screen detected.');
                     loginSuccess = true;
                     break;
@@ -168,7 +169,9 @@ async function postTweetViaPlaywright(tweetText) {
 
             if (!loginSuccess) {
                 console.log('Waiting for Twitter Home feed (final check)...');
-                await page.waitForSelector('[data-testid="SideNav_NewTweet_Button"]', { timeout: 15000 });
+                await page.waitForSelector('[data-testid="SideNav_NewTweet_Button"]', { timeout: 30000 }).catch(() => {
+                    console.log('Final wait for Tweet Button timed out.');
+                });
             }
         }
 
