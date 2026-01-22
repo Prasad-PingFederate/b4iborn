@@ -158,6 +158,9 @@ async function postTweetViaAPI(tweetText) {
         if (error.code === 403) {
             console.error('ERROR 403: Forbidden. Your X Developer App may have "Read-only" permissions or incorrect credentials.');
             console.error('Check: https://developer.twitter.com/en/portal/dashboard');
+        } else if (error.code === 402) {
+            console.error('ERROR 402: Payment Required (CreditsDepleted). Your X API quota is exhausted.');
+            console.error('The script will attempt to fall back to Browser Automation (Playwright).');
         } else {
             console.error('Failed to post via API:', error.message);
         }
@@ -198,12 +201,17 @@ async function main() {
             // Attempt to post: API first, then Playwright fallback
             let posted = false;
 
-            if (process.env.TWITTER_API_KEY) {
+            // Optional: Skip API if PREFER_PLAYWRIGHT is set
+            const useApiFirst = !process.env.PREFER_PLAYWRIGHT && !!process.env.TWITTER_API_KEY;
+
+            if (useApiFirst) {
                 posted = await postTweetViaAPI(tweetText);
+            } else if (process.env.PREFER_PLAYWRIGHT) {
+                console.log('PREFER_PLAYWRIGHT is set. Skipping API and using Browser Automation.');
             }
 
             if (!posted && process.env.X_USERNAME) {
-                console.log('Falling back to Playwright (Browser Automation) for posting...');
+                console.log('Using Playwright (Browser Automation) for posting...');
                 try {
                     await postTweetViaPlaywright(tweetText);
                     posted = true;
